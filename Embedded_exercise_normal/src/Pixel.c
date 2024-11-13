@@ -91,13 +91,46 @@ void run(uint8_t x){
 
 //Latch signal. See colorsshield.pdf or DM163.pdf in project folder on how latching works
 void latch(){
-
+	CONTROL_SIGNAL |= (1 << 1);
+	CONTROL_SIGNAL &= ~(1 << 1);
 
 }
 
 
 //Set one line (channel) as active, one at a time.
-void open_line(uint8_t x){
+void open_line(uint8_t channel) {
+    // Clear all channels first to ensure only the selected channel is active
+    CHANNEL_SIGNAL = 0;
 
-
+    // Use switch-case to activate only the specified channel
+    switch (channel) {
+        case 0:
+            CHANNEL_SIGNAL |= (1 << 0); // Activate channel 0
+            break;
+        case 1:
+            CHANNEL_SIGNAL |= (1 << 1); // Activate channel 1
+            break;
+        case 2:
+            CHANNEL_SIGNAL |= (1 << 2); // Activate channel 2
+            break;
+        case 3:
+            CHANNEL_SIGNAL |= (1 << 3); // Activate channel 3
+            break;
+        case 4:
+            CHANNEL_SIGNAL |= (1 << 4); // Activate channel 4
+            break;
+        case 5:
+            CHANNEL_SIGNAL |= (1 << 5); // Activate channel 5
+            break;
+        case 6:
+            CHANNEL_SIGNAL |= (1 << 6); // Activate channel 6
+            break;
+        case 7:
+            CHANNEL_SIGNAL |= (1 << 7); // Activate channel 7
+            break;
+        default:
+            // Default case to clear all channels if an invalid channel number is provided
+            CHANNEL_SIGNAL = 0;
+            break;
+    }
 }
