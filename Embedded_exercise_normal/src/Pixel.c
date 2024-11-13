@@ -37,7 +37,7 @@ void setup(){
 
 	//Write code that sets 6-bit values in register of DM163 chip. Recommended that every bit in that register is set to 1. 6-bits and 24 "bytes", so some kind of loop structure could be nice.
 	//24*6 bits needs to be transmitted
-	 uint8_t gamma_vector[3] = {0x3F, 0x3F, 0x3F}; // Gamma correction values (all bits set to 1)
+	 uint8_t gamma_vector[3] = {63,63,63}; // Gamma correction values (all bits set to 1)
 
     // Transmit data to the 8x8 LED matrix (8 rows, 3 colors per LED)
     for (int i = 0; i < 8; i++) { // Loop over 8 rows
@@ -45,7 +45,7 @@ void setup(){
             uint8_t t = gamma_vector[color]; // Get the color value
 
             // Send 6-bit value (0b111111 = 0x3F)
-            for (int bit = 5; bit >= 0; bit--) {   // Loop over 6 bits
+            for (int bit =0 ; bit < 6 ;bit++) {   // Loop over 6 bits
                 if (t & (1 << bit)) {
                     CHANNEL_SIGNAL = 1; // Write 1 to the register
                 }else {
