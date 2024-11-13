@@ -45,20 +45,18 @@ void setup(){
             uint8_t t = gamma_vector[color]; // Get the color value
 
             // Send 6-bit value (0b111111 = 0x3F)
-            for (int bit = 5; bit >= 0; bit--) { // Loop through 6 bits per color
+            for (int bit = 5; bit >= 0; bit--) {   // Loop over 6 bits
                 if (t & (1 << bit)) {
                     CHANNEL_SIGNAL = 1; // Write 1 to the register
-                } else {
-                    CHANNEL_SIGNAL = 0; // Write 0 to the register
-                }
-
-                // 5. Toggle clock signal to write each bit
-                CONTROL_SIGNAL |= (1 << 1);  // Set CLK = 1
-                CONTROL_SIGNAL &= ~(1 << 1); // Set CLK = 0
-            }
-        }
-    }
-
+                }else {
+                    CONTROL_SIGNAL &=~0x10; //SET only BIT4 to 0 in control signal (SDA bit)
+                    CONTROL_SIGNAL &=~0x08; //SET only BIT3 to 0 in control signal (CLK bit)
+                    t <<= 1; //shift one to left
+                    CONTROL_SIGNAL|=0x08; //SET only BIT3 to 1 in control signal (CLK bit)
+        		}
+    		}
+		}
+	}
 	
 
 	//Final thing in this function is to set SB-bit to 1 to enable transmission to 8-bit register.
