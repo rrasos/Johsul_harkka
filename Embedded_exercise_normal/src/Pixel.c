@@ -37,29 +37,29 @@ void setup(){
 
 	//Write code that sets 6-bit values in register of DM163 chip. Recommended that every bit in that register is set to 1. 6-bits and 24 "bytes", so some kind of loop structure could be nice.
 	//24*6 bits needs to be transmitted
-	uint8_t value = 0x3F; // or 0x3F
+	 uint8_t gamma_vector[3] = {0x3F, 0x3F, 0x3F}; // Gamma correction values (all bits set to 1)
 
-	//loop for 8 rows of pixels
-	for (int y = 0; y<8; y++){
-		//loop for color components RGB (red green blue)
-		for (int color = 0; color < 3; color++){
-			//loop through 24 registers
-			for (int x = 0; x<24 ; x++){
-				uint8_t register_data = value;
-				CHANNEL_SIGNAL = register_data;
-			}
-		}
-	}
+    // Transmit data to the 8x8 LED matrix (8 rows, 3 colors per LED)
+    for (int i = 0; i < 8; i++) { // Loop over 8 rows
+        for (int color = 0; color < 3; color++) { // Loop over RGB colors
+            uint8_t t = gamma_vector[color]; // Get the color value
 
-	/*
-	OR
-	uint8_t value = 0x3F;
+            // Send 6-bit value (0b111111 = 0x3F)
+            for (int bit = 5; bit >= 0; bit--) { // Loop through 6 bits per color
+                if (t & (1 << bit)) {
+                    CHANNEL_SIGNAL = 1; // Write 1 to the register
+                } else {
+                    CHANNEL_SIGNAL = 0; // Write 0 to the register
+                }
 
-	for (int i =0; i<24;i++){
-		uint8_t register_data = value;
-		CHANNEL_SIGNAL = register_data;
-	}	
-	*/
+                // 5. Toggle clock signal to write each bit
+                CONTROL_SIGNAL |= (1 << 1);  // Set CLK = 1
+                CONTROL_SIGNAL &= ~(1 << 1); // Set CLK = 0
+            }
+        }
+    }
+
+	
 
 	//Final thing in this function is to set SB-bit to 1 to enable transmission to 8-bit register.
 	CONTROL_SIGNAL |= (1 << 2); //set bit2 (SB) to 1
@@ -101,6 +101,3 @@ void open_line(uint8_t x){
 
 
 }
-
-
-
