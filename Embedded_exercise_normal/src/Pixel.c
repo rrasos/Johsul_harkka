@@ -46,8 +46,8 @@ void setup(){
 
             // Send 6-bit value (0b111111 = 0x3F)
             for (int bit =0 ; bit < 6 ;bit++) {   // Loop over 6 bits
-                if (t & (1 << bit)) {
-                    CHANNEL_SIGNAL = 1; // Write 1 to the register
+                if (t &  0x80) {
+                    CONTROL_SIGNAL |= 0x10; // Write 1 to the register
                 }else {
                     CONTROL_SIGNAL &=~0x10; //SET only BIT4 to 0 in control signal (SDA bit)
                     CONTROL_SIGNAL &=~0x08; //SET only BIT3 to 0 in control signal (CLK bit)
@@ -68,7 +68,9 @@ void setup(){
 void SetPixel(uint8_t x,uint8_t y, uint8_t r, uint8_t g, uint8_t b){
 
 	//Hint: you can invert Y-axis quite easily with 7-y
-	dots[x][y][0]=b;
+	dots[x][7-y][0]=b;
+	dots[x][7-y][0]=r;
+	dots[x][7-y][0]=g;
 	//Write rest of two lines of code required to make this function work properly (green and red colors to array).
 
 
