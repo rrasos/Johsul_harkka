@@ -69,8 +69,8 @@ void SetPixel(uint8_t x,uint8_t y, uint8_t r, uint8_t g, uint8_t b){
 
 	//Hint: you can invert Y-axis quite easily with 7-y
 	dots[x][7-y][0]=b;
+    dots[x][7-y][0]=g;
 	dots[x][7-y][0]=r;
-	dots[x][7-y][0]=g;
 	//Write rest of two lines of code required to make this function work properly (green and red colors to array).
 
 
@@ -78,11 +78,34 @@ void SetPixel(uint8_t x,uint8_t y, uint8_t r, uint8_t g, uint8_t b){
 
 
 //Put new data to led matrix. Hint: This function is supposed to send 24-bytes and parameter x is for channel x-coordinate.
-void run(uint8_t x){
+void run(uint8_t x) {
+    // Set latch to 0
+    CONTROL_SIGNAL &= ~(1 << 1);
 
+    // Iterate through rows (y), colors (color), and bits (x)
+    for (uint8_t y = 0; y < 8; y++) {          // Loop through rows
+        for (uint8_t color = 0; color < 3; color++) {  // Loop through color channels (B, G, R)
+            for (uint8_t bit_pos = 0; bit_pos < 8; bit_pos++) {  // Loop through 8 bits in the row
+                // Extract the bit from the dots array for the current pixel
+                if (dots[bit_pos][y][color] & (1 << (7 - x))) {
+                    // Set SDA (bit4) to 1
+                    CONTROL_SIGNAL |= (1 << 4);
+                } else {
+                    // Set SDA (bit4) to 0
+                    CONTROL_SIGNAL &= ~(1 << 4);
+                }
 
+                // Toggle CLK (bit3)
+                CONTROL_SIGNAL &= ~(1 << 3); // Set CLK to 0
+                CONTROL_SIGNAL |= (1 << 3);  // Set CLK to 1
+                
+            }
+        }
+    }
 
-	//Write code that writes data to led matrix driver (8-bit data). Use values from dots array
+    latch();
+    CONTROL_SIGNAL &= ~(1 << 3); // Set CLK to 0
+}
 	//Hint: use nested loops (loops inside loops)
 	//Hint2: loop iterations are 8,3,8 (pixels,color,8-bitdata)
 
