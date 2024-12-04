@@ -111,7 +111,7 @@ int main()
 
 	    //setup screen
 	    setup();
-		
+		create_ship(4,0);
 
 
 	    Xil_ExceptionEnable();
@@ -202,4 +202,9 @@ void ButtonHandler(void *CallBackRef, u32 Bank, u32 Status){
 	//****END OF OWN CODE*****************
 }
 
-
+void create_ship(uint8_t x,uint8_t y)
+{
+	SetPixel(x,y,186,85,211);
+	run(x);
+	open_line(x);
+}
