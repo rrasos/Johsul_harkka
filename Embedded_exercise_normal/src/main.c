@@ -111,7 +111,7 @@ int main()
 
 	    //setup screen
 	    setup();
-
+		
 
 
 	    Xil_ExceptionEnable();
@@ -141,7 +141,7 @@ void TickHandler(void *CallBackRef){
 
 
 	//****Write code here ****
-
+	
 
 
 

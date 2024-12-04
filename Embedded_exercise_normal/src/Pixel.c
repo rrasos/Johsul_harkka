@@ -8,18 +8,13 @@
 #include "Pixel.h"
 
 //define control and chanel signals
-#define CONTROL_SIGNAL   *(uint32_t*) 0x41220008
-#define CHANNEL_SIGNAL  *(uint32_t*) 0x41220000
-
 
 //Table for pixel dots.
 //				 dots[X][Y][COLOR]
 volatile uint8_t dots[8][8][3]={0};
 
-
 // Here the setup operations for the LED matrix will be performed
 void setup(){
-
 	//1. Initialize control and chanel signals to 0
 	CONTROL_SIGNAL = 0;
 	CHANNEL_SIGNAL = 0;
@@ -34,7 +29,6 @@ void setup(){
 	//Set sda bit to 1
 	CHANNEL_SIGNAL |= (1 << 4);
 	
-
 	//Write code that sets 6-bit values in register of DM163 chip. Recommended that every bit in that register is set to 1. 6-bits and 24 "bytes", so some kind of loop structure could be nice.
 	//24*6 bits needs to be transmitted
 	 uint8_t gamma_vector[3] = {63,63,63}; // Gamma correction values (all bits set to 1)
@@ -58,7 +52,6 @@ void setup(){
 		}
 	}
 	
-
 	//Final thing in this function is to set SB-bit to 1 to enable transmission to 8-bit register.
 	CONTROL_SIGNAL |= (1 << 2); //set bit2 (SB) to 1
 
@@ -69,8 +62,8 @@ void SetPixel(uint8_t x,uint8_t y, uint8_t r, uint8_t g, uint8_t b){
 
 	//Hint: you can invert Y-axis quite easily with 7-y
 	dots[x][7-y][0]=b;
-    dots[x][7-y][0]=g;
-	dots[x][7-y][0]=r;
+    dots[x][7-y][1]=g;
+	dots[x][7-y][2]=r;
 	//Write rest of two lines of code required to make this function work properly (green and red colors to array).
 
 
@@ -87,7 +80,7 @@ void run(uint8_t x) {
         for (uint8_t color = 0; color < 3; color++) {  // Loop through color channels (B, G, R)
             for (uint8_t bit_pos = 0; bit_pos < 8; bit_pos++) {  // Loop through 8 bits in the row
                 // Extract the bit from the dots array for the current pixel
-                if (dots[bit_pos][y][color] & (1 << (7 - x))) {
+                if (dots[x][y][color] & 0x80) {
                     // Set SDA (bit4) to 1
                     CONTROL_SIGNAL |= (1 << 4);
                 } else {
@@ -109,8 +102,6 @@ void run(uint8_t x) {
 	//Hint: use nested loops (loops inside loops)
 	//Hint2: loop iterations are 8,3,8 (pixels,color,8-bitdata)
 
-
-}
 
 //Latch signal. See colorsshield.pdf or DM163.pdf in project folder on how latching works
 void latch(){

@@ -16,7 +16,8 @@
 #include "xscugic.h"
 #include "xparameters.h"
 
-
+#define CONTROL_SIGNAL   *(uint32_t*) 0x41220008
+#define CHANNEL_SIGNAL  *(uint32_t*) 0x41220000
 
 
 void setup();
