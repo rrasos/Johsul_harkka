@@ -61,6 +61,8 @@
 #include "Pixel.h"
 #include "Interrupt_setup.h"
 
+volatile uint8_t current_channel = 0;
+
 //********************************************************************
 //***************TRY TO READ COMMENTS*********************************
 //********************************************************************
@@ -94,8 +96,7 @@ Brief description:
 
 *****************************************************************************************/
 
-
-
+void create_ship(uint8_t x,uint8_t y);
 
 int main()
 {
@@ -112,7 +113,7 @@ int main()
 	    //setup screen
 	    setup();
 		create_ship(4,0);
-
+		
 
 	    Xil_ExceptionEnable();
 
@@ -138,16 +139,17 @@ void TickHandler(void *CallBackRef){
 	//exceptions must be disabled when updating screen
 	Xil_ExceptionDisable();
 
+	// check that chanel is not higher than 7
+	if (current_channel > 7){
+		current_channel = 0;
+	}
 
-
-	//****Write code here ****
-	
-
-
-
-
-
-
+	//**OWN CODE STARTS */
+	//close all chanels   
+	CHANNEL_SIGNAL = 0;
+	run(current_channel);
+	open_line(current_channel);
+	current_channel = (current_channel + 1) % 8;
 	//****END OF OWN CODE*****************
 
 	//*********clear timer interrupt status. DO NOT REMOVE********

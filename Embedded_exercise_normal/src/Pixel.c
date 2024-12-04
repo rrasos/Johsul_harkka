@@ -1,21 +1,20 @@
 /*
- * Pixel.c
- *
- *  Created on: -----
- *      Author: -----
- */
+* Pixel.c
+*
+*  Created on: -----
+*      Author: -----
+*/
 
 #include "Pixel.h"
 
-//define control and chanel signals
-
+//define control and channel signals
 //Table for pixel dots.
-//				 dots[X][Y][COLOR]
-volatile uint8_t dots[8][8][3]={0};
+//               dots[X][Y][COLOR]
+volatile uint8_t dots[8][8][3] = {0};
 
 // Here the setup operations for the LED matrix will be performed
-void setup(){
-	//1. Initialize control and chanel signals to 0
+void setup() {
+    //1. Initialize control and chanel signals to 0
 	CONTROL_SIGNAL = 0;
 	CHANNEL_SIGNAL = 0;
 
@@ -33,89 +32,73 @@ void setup(){
 	//24*6 bits needs to be transmitted
 	 uint8_t gamma_vector[3] = {63,63,63}; // Gamma correction values (all bits set to 1)
 
-    // Transmit data to the 8x8 LED matrix (8 rows, 3 colors per LED)
     for (int i = 0; i < 8; i++) { // Loop over 8 rows
         for (int color = 0; color < 3; color++) { // Loop over RGB colors
-            uint8_t t = gamma_vector[color]; // Get the color value
-
-            // Send 6-bit value (0b111111 = 0x3F)
-            for (int bit =0 ; bit < 6 ;bit++) {   // Loop over 6 bits
-                if (t &  0x80) {
-                    CONTROL_SIGNAL |= 0x10; // Write 1 to the register
-                }else {
-                    CONTROL_SIGNAL &=~0x10; //SET only BIT4 to 0 in control signal (SDA bit)
-                    CONTROL_SIGNAL &=~0x08; //SET only BIT3 to 0 in control signal (CLK bit)
-                    t <<= 1; //shift one to left
-                    CONTROL_SIGNAL|=0x08; //SET only BIT3 to 1 in control signal (CLK bit)
-        		}
-    		}
-		}
-	}
-	
-	//Final thing in this function is to set SB-bit to 1 to enable transmission to 8-bit register.
-	CONTROL_SIGNAL |= (1 << 2); //set bit2 (SB) to 1
-
-}
-
-//Change value of one pixel at led matrix. This function is only used for changing values of dots array
-void SetPixel(uint8_t x,uint8_t y, uint8_t r, uint8_t g, uint8_t b){
-
-	//Hint: you can invert Y-axis quite easily with 7-y
-	dots[x][7-y][0]=b;
-    dots[x][7-y][1]=g;
-	dots[x][7-y][2]=r;
-	//Write rest of two lines of code required to make this function work properly (green and red colors to array).
-
-
-}
-
-
-//Put new data to led matrix. Hint: This function is supposed to send 24-bytes and parameter x is for channel x-coordinate.
-void run(uint8_t x) {
-    // Set latch to 0
-    CONTROL_SIGNAL &= ~(1 << 1);
-
-    // Iterate through rows (y), colors (color), and bits (x)
-    for (uint8_t y = 0; y < 8; y++) {          // Loop through rows
-        for (uint8_t color = 0; color < 3; color++) {  // Loop through color channels (B, G, R)
-            for (uint8_t bit_pos = 0; bit_pos < 8; bit_pos++) {  // Loop through 8 bits in the row
-                // Extract the bit from the dots array for the current pixel
-                if (dots[x][y][color] & 0x80) {
-                    // Set SDA (bit4) to 1
-                    CONTROL_SIGNAL |= (1 << 4);
+            uint8_t value = gamma_vector[color];
+            for (int bit = 0; bit < 6; bit++) { // Loop over 6 bits
+                if (value & 0x20) { // Check highest bit
+                    CONTROL_SIGNAL |= (1 << 4); // SDA high
                 } else {
-                    // Set SDA (bit4) to 0
-                    CONTROL_SIGNAL &= ~(1 << 4);
+                    CONTROL_SIGNAL &= ~(1 << 4); // SDA low
                 }
 
-                // Toggle CLK (bit3)
-                CONTROL_SIGNAL &= ~(1 << 3); // Set CLK to 0
-                CONTROL_SIGNAL |= (1 << 3);  // Set CLK to 1
-                
+                CONTROL_SIGNAL &= ~(1 << 3); // CLK low
+                CONTROL_SIGNAL |= (1 << 3);  // CLK high
+                value <<= 1; // Shift to the next bit
             }
         }
     }
 
-    latch();
-    CONTROL_SIGNAL &= ~(1 << 3); // Set CLK to 0
-}
-	//Hint: use nested loops (loops inside loops)
-	//Hint2: loop iterations are 8,3,8 (pixels,color,8-bitdata)
-
-
-//Latch signal. See colorsshield.pdf or DM163.pdf in project folder on how latching works
-void latch(){
-	CONTROL_SIGNAL |= (1 << 1);
-	CONTROL_SIGNAL &= ~(1 << 1);
+    // Final step: Set SB-bit to 1 to enable transmission to the 8-bit register.
+    CONTROL_SIGNAL |= (1 << 2); // Set bit 2 (SB) to 1
 
 }
 
+// Change value of one pixel at LED matrix. This function is only used for changing values of the dots array.
+void SetPixel(uint8_t x, uint8_t y, uint8_t r, uint8_t g, uint8_t b) {
+    dots[x][7 - y][0] = b; // Blue
+    dots[x][7 - y][1] = g; // Green
+    dots[x][7 - y][2] = r; // Red
+}
 
-//Set one line (channel) as active, one at a time.
+
+
+// Put new data to the LED matrix. This function is supposed to send 24-bytes.
+void run(uint8_t x) {
+    CONTROL_SIGNAL &= ~(1 << 1);  // latch off
+    // rows, color, bits
+    for (uint8_t y = 0; y < 8; y++) {
+        for (uint8_t color = 0; color < 3; color++) {
+            for (uint8_t bit_pos = 0; bit_pos < 8; bit_pos++) {
+                if (dots[x][y][color] & (0x80 >> bit_pos)) {
+                    CONTROL_SIGNAL |= (1 << 4);  // SDA on
+                } else {
+                    CONTROL_SIGNAL &= ~(1 << 4);  // SDA of
+                }
+
+                
+                CONTROL_SIGNAL &= ~(1 << 3);  // CLK down
+                CONTROL_SIGNAL |= (1 << 3);   // CLK up
+            }
+        }
+    }
+
+    latch();  
+    CONTROL_SIGNAL &= ~(1 << 3);  //Aseta CLK down
+}
+
+// Latch signal. See colorsshield.pdf or DM163.pdf in the project folder on how latching works.
+void latch() {
+    CONTROL_SIGNAL |= (1 << 1);
+    CONTROL_SIGNAL &= ~(1 << 1);
+}
+
+
+
+// Set one line (channel) as active, one at a time.
 void open_line(uint8_t channel) {
     // Clear all channels first to ensure only the selected channel is active
     CHANNEL_SIGNAL = 0;
-
     // Use switch-case to activate only the specified channel
     switch (channel) {
         case 0:
@@ -143,7 +126,7 @@ void open_line(uint8_t channel) {
             CHANNEL_SIGNAL |= (1 << 7); // Activate channel 7
             break;
         default:
-            // Default case to clear all channels if an invalid channel number is provided
+            // default case to clear all channels if an invalid channel number is provided
             CHANNEL_SIGNAL = 0;
             break;
     }
