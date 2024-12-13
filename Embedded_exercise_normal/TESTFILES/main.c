@@ -61,6 +61,22 @@
 #include "Pixel.h"
 #include "Interrupt_setup.h"
 
+volatile uint8_t current_channel = 0;
+
+void AlienMovementHandler(void);
+void LaserHandler(void);
+
+uint8_t channel_line = 0;
+uint8_t alien = 0;
+uint8_t direction = 0;
+uint8_t x = 4;
+uint8_t laser_on = 0;
+uint8_t laser_y = 2;
+uint8_t laser_x = 4;
+uint8_t misses = 7;
+uint8_t points = 0;
+
+
 //********************************************************************
 //***************TRY TO READ COMMENTS*********************************
 //********************************************************************
@@ -94,22 +110,7 @@ Brief description:
 
 *****************************************************************************************/
 
-void create_ship(uint8_t x,uint8_t y)
-{
-
-	SetPixel(x, y, 255, 0, 0); //middle
-	SetPixel(x, y + 1, 186, 85, 211); //upper middle
-	SetPixel(x+1, y, 186, 85, 211);
-	SetPixel(x-1, y, 186, 85, 211);
-	run(x-1);
-	run(x);
-	run(x+1);
-	open_line(x);
-
-}
-
-
-
+void create_ship(uint8_t x);
 
 int main()
 {
@@ -125,13 +126,11 @@ int main()
 
 	    //setup screen
 	    setup();
-	    create_ship(4,0);
-
 
 
 
 	    Xil_ExceptionEnable();
-
+		create_ship(4);
 
 
 	    //Try to avoid writing any code in the main loop.
@@ -154,16 +153,12 @@ void TickHandler(void *CallBackRef){
 	//exceptions must be disabled when updating screen
 	Xil_ExceptionDisable();
 
-
-
-	//****Write code here ****
-
-
-
-
-
-
-
+	//**OWN CODE STARTS */
+	//close all chanels
+	CHANNEL_SIGNAL = 0;
+	run(current_channel);
+	open_line(current_channel);
+	current_channel = (current_channel + 1) % 8;
 	//****END OF OWN CODE*****************
 
 	//*********clear timer interrupt status. DO NOT REMOVE********
@@ -175,47 +170,146 @@ void TickHandler(void *CallBackRef){
 }
 
 
-//Timer interrupt for moving alien, shooting... Frequency is 10 Hz by default
 void TickHandler1(void *CallBackRef){
 
-	//Don't remove this
-	uint32_t StatusEvent;
+    // Don't remove this
+    uint32_t StatusEvent;
 
-	//****Write code here ****
+    // Call modular functions for alien and laser handling
+    AlienMovementHandler();
+    LaserHandler();
 
-
-
-
-
-	//****END OF OWN CODE*****************
-	//clear timer interrupt status. DO NOT REMOVE
-	StatusEvent = XTtcPs_GetInterruptStatus((XTtcPs *)CallBackRef);
-	XTtcPs_ClearInterruptStatus((XTtcPs *)CallBackRef, StatusEvent);
-
+    // Clear timer interrupt status. DO NOT REMOVE
+    StatusEvent = XTtcPs_GetInterruptStatus((XTtcPs *)CallBackRef);
+    XTtcPs_ClearInterruptStatus((XTtcPs *)CallBackRef, StatusEvent);
 }
 
+void AlienMovementHandler(void) {
+    if (direction == 0) {
+        SetPixel(alien, 6, 0, 50, 0);
+        SetPixel(alien - 1, 6, 0, 0, 0);
+
+        if (alien == 7) {
+            direction = 1;
+        } else {
+            alien++;
+        }
+    } else if (direction == 2) {
+        // Handle end-game or specific direction case
+    } else {
+        if (alien == 0) {
+            direction = 0;
+        } else {
+            alien--;
+        }
+
+        SetPixel(alien, 6, 0, 50, 0);
+        SetPixel(alien + 1, 6, 0, 0, 0);
+    }
+}
+
+// Function to handle laser behavior
+void LaserHandler(void) {
+    if (laser_on == 1) {
+        if (laser_y < 7) {
+            SetPixel(laser_x, laser_y, 50, 0, 0);
+        } else if (laser_y == 7) {
+            SetPixel(laser_x, laser_y - 1, 0, 0, 0);
+        }
+
+        if (laser_y > 2) {
+            SetPixel(laser_x, laser_y - 1, 0, 0, 0);
+        }
+
+        if (laser_y == 6 && alien == laser_x) {
+            // Alien is hit
+            SetPixel(laser_x, laser_y, 0, 0, 0);
+            SetPixel(alien, 6, 0, 0, 0);
+            SetPixel(alien - 1, 6, 0, 0, 0);
+            laser_on = 0;
+            laser_y = 2;
+            alien = 0;
+            SetPixel(points, 7, 0, 50, 0);
+            points++;
+
+            if (points == 5) {
+                // Win condition
+                for (int it = 0; it < 8; it++) {
+                    for (int j = 0; j < 8; j++) {
+                        SetPixel(it, j, 0, 50, 0); // Green color for win
+                    }
+                }
+                direction = 2; // Stop movement
+            }
+        } else if (laser_y < 7) {
+            laser_y++;
+        } else {
+            // Laser missed
+            SetPixel(misses, 7, 50, 0, 0); // Red color for miss
+            misses--;
+            laser_on = 0;
+            laser_y = 2;
+
+            if (misses == 2) {
+                // Lose condition
+                for (int it = 0; it < 8; it++) {
+                    for (int j = 0; j < 8; j++) {
+                        SetPixel(it, j, 50, 0, 0); // Red color for loss
+                    }
+                }
+                direction = 2; // Stop movement
+            }
+        }
+    }
+}
 
 //Interrupt handler for switches and buttons.
 //Reading Status will tell which button or switch was used
 //Bank information is useless in this exercise
-void ButtonHandler(void *CallBackRef, u32 Bank, u32 Status){
-	//****Write code here ****
+void ButtonHandler(void *CallBackRef, u32 Bank, u32 Status) {
+    // Clear all pixels in the ship's possible area (y = 0 and y = 1)
+    for (int i = 0; i < 8; i++) {
+        SetPixel(i, 0, 0, 0, 0); // Clear bottom row
+        SetPixel(i, 1, 0, 0, 0); // Clear middle-upper row
+    }
 
-	//Hint: Status==0x01 ->btn0, Status==0x02->btn1, Status==0x04->btn2, Status==0x08-> btn3, Status==0x10->SW0, Status==0x20 -> SW1
+    // Move the ship left
+    if (Status == 0x08) { // btn3
+        if (x > 1) { // Prevent moving out of bounds
+            x--; // Update ship position
+        }
+    }
 
-	//If true, btn0 was used to trigger interrupt
-	if(Status==0x01){
+    // Move the ship right
+    if (Status == 0x04) { // btn2
+        if (x < 6) { // Prevent moving out of bounds
+            x++; // Update ship position
+        }
+    }
 
+    // Fire the laser
+    if (Status == 0x01) { // btn0
+        if (laser_on == 0) { // Only allow one laser at a time
+            laser_on = 1;
+            laser_x = x;   // Laser starts from the middle of the ship
+            laser_y = 2;   // Just above the ship
+        }
+    }
+
+	if (Status == 0x20){
+		for (int i = 0; i < 8; i++) {
+			for (int k; k<8;k++)
+        SetPixel(i, k, 0, 0, 0);      
 	}
 
-
-
-
-
-
-
-
-	//****END OF OWN CODE*****************
+    // Redraw the ship at its new position
+    create_ship(x);
 }
 
 
+void create_ship(uint8_t x){
+	SetPixel(x-1,0,186,85,211);
+	SetPixel(x,0,186,85,211);
+	SetPixel(x,1,186,85,211);
+	SetPixel(x+1,0,186,85,211);
+}
