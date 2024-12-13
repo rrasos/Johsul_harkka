@@ -61,11 +61,6 @@
 #include "Pixel.h"
 #include "Interrupt_setup.h"
 
-volatile uint8_t current_channel = 0;
-volatile int life = 3;
-
-volatile uint8_t al = 0;
-volatile uint8_t dir = 0;
 
 //********************************************************************
 //***************TRY TO READ COMMENTS*********************************
@@ -105,7 +100,7 @@ uint8_t direction = 0;
 uint8_t x = 4;
 
 
-void create_ship(uint8_t x,uint8_t y);
+void create_ship(uint8_t x);
 void AlienMovementHandler();
 
 int main()
@@ -171,6 +166,7 @@ void TickHandler1(void *CallBackRef){
 	uint32_t StatusEvent;
 
 	//****Write code here ****
+	AlienMovementHandler();
 
 
 
@@ -207,22 +203,39 @@ void ButtonHandler(void *CallBackRef, u32 Bank, u32 Status){
 	//****END OF OWN CODE*****************
 }
 
-void create_ship(uint8_t x,uint8_t y)
+void create_ship(uint8_t)
 {
-	// do life coloring here
+	// green when 3 lifes left
 	if (life = 3){
-		SetPixel(x-1,0,186,85,211);
-		SetPixel(x,0,186,85,211); 
-		SetPixel(x,1,186,85,211);
-		SetPixel(x+1,0,186,85,211);
+		SetPixel(x-1,0,0,255,0);
+		SetPixel(x,0,0,255,0); 
+		SetPixel(x,1,0,255,0);
+		SetPixel(x+1,0,0,255,0);
 	}
+
+	// yellow when 2 lifes left
+	if (life = 2){
+		SetPixel(x-1,0,200,55,0);
+		SetPixel(x,0,200,55,0); 
+		SetPixel(x,1,200,55,0);
+		SetPixel(x+1,0,200,55,0);
+	}
+	// red when 1 life left
+	if (life = 1){
+		SetPixel(x-1,0,255,0,0);
+		SetPixel(x,0,255,0,0); 
+		SetPixel(x,1,255,0,0);
+		SetPixel(x+1,0,255,0,0);
+	}
+
+
 }
 
 void AlienMovementHandler()
 {
 	 if (direction == 0) {
-        SetPixel(alien, 6, 0, 50, 0);
-        SetPixel(alien - 1, 6, 0, 0, 0);
+        SetPixel(alien, 7, 0, 50, 0);
+        SetPixel(alien - 1, 7, 0, 0, 0);
 
         if (alien == 7) {
             direction = 1;
@@ -238,7 +251,7 @@ void AlienMovementHandler()
             alien--;
         }
 
-        SetPixel(alien, 6, 0, 50, 0);
-        SetPixel(alien + 1, 6, 0, 0, 0);
+        SetPixel(alien, 7, 0, 50, 0);
+        SetPixel(alien + 1, 7, 0, 0, 0);
     }
 }
