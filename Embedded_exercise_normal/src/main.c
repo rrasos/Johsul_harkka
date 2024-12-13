@@ -112,11 +112,11 @@ int main()
 
 	    //setup screen
 	    setup();
-		create_ship(4,0);
+		
 		
 
 	    Xil_ExceptionEnable();
-
+		create_ship(4,0);
 
 
 	    //Try to avoid writing any code in the main loop.
@@ -138,11 +138,6 @@ void TickHandler(void *CallBackRef){
 
 	//exceptions must be disabled when updating screen
 	Xil_ExceptionDisable();
-
-	// check that chanel is not higher than 7
-	if (current_channel > 7){
-		current_channel = 0;
-	}
 
 	//**OWN CODE STARTS */
 	//close all chanels   
