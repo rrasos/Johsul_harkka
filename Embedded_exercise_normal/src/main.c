@@ -61,6 +61,21 @@
 #include "Pixel.h"
 #include "Interrupt_setup.h"
 
+volatile uint8_t current_channel = 0;
+
+void AlienMovementHandler(void);
+void LaserHandler(void);
+
+uint8_t channel_line = 0;
+uint8_t alien = 0;
+uint8_t direction = 0;
+uint8_t x = 4;
+uint8_t laser_on = 0;
+uint8_t laser_y = 2;
+uint8_t laser_x = 4;
+uint8_t misses = 7;
+uint8_t points = 0;
+
 
 //********************************************************************
 //***************TRY TO READ COMMENTS*********************************
@@ -75,33 +90,22 @@
 
 
 /***************************************************************************************
-Name:
+Name:Rasmus Sorila
 Student number:
 
-Name:
-Student number:
-
-Name:
+Name:Oskar Kainulainen
 Student number:
 
 Tick boxes that you have coded
 
 Led-matrix driver		Game		    Assembler
-	[]					[]					[]
+	[x]					[x]					[]
 
 Brief description:
 
 *****************************************************************************************/
-volatile uint8_t current_channel = 0;
-volatile int life = 3;
-
-uint8_t alien = 0;
-uint8_t direction = 0;
-uint8_t x = 4;
-
 
 void create_ship(uint8_t x);
-void AlienMovementHandler();
 
 int main()
 {
@@ -114,11 +118,12 @@ int main()
 	    init_interrupts();
 #endif
 
-
 	    //setup screen
 	    setup();
-		
+
 	    Xil_ExceptionEnable();
+
+		//initialises ship in middle
 		create_ship(4);
 
 
@@ -127,7 +132,6 @@ int main()
 
 
 		}
-
 
 		cleanup_platform();
 		return 0;
@@ -143,7 +147,8 @@ void TickHandler(void *CallBackRef){
 	Xil_ExceptionDisable();
 
 	//**OWN CODE STARTS */
-	//close all chanels   
+
+	//close all chanels
 	CHANNEL_SIGNAL = 0;
 	run(current_channel);
 	open_line(current_channel);
@@ -159,99 +164,186 @@ void TickHandler(void *CallBackRef){
 }
 
 
-//Timer interrupt for moving alien, shooting... Frequency is 10 Hz by default
 void TickHandler1(void *CallBackRef){
 
-	//Don't remove this
-	uint32_t StatusEvent;
+    // Don't remove this
+    uint32_t StatusEvent;
 
-	//****Write code here ****
-	AlienMovementHandler();
+    // Call modular functions for alien and laser handling
+    AlienMovementHandler();
+    LaserHandler();
 
-
-
-
-
-	//****END OF OWN CODE*****************
-	//clear timer interrupt status. DO NOT REMOVE
-	StatusEvent = XTtcPs_GetInterruptStatus((XTtcPs *)CallBackRef);
-	XTtcPs_ClearInterruptStatus((XTtcPs *)CallBackRef, StatusEvent);
-
+    // Clear timer interrupt status. DO NOT REMOVE
+    StatusEvent = XTtcPs_GetInterruptStatus((XTtcPs *)CallBackRef);
+    XTtcPs_ClearInterruptStatus((XTtcPs *)CallBackRef, StatusEvent);
 }
 
+void AlienMovementHandler(void) {
 
-//Interrupt handler for switches and buttons.
-//Reading Status will tell which button or switch was used
-//Bank information is useless in this exercise
-void ButtonHandler(void *CallBackRef, u32 Bank, u32 Status){
-	//****Write code here ****
+	//moves right
+    if (direction == 0) {
+        SetPixel(alien, 6, 55, 0, 200);
+        SetPixel(alien - 1, 6, 0, 0, 0);
 
-	//Hint: Status==0x01 ->btn0, Status==0x02->btn1, Status==0x04->btn2, Status==0x08-> btn3, Status==0x10->SW0, Status==0x20 -> SW1
-
-	//If true, btn0 was used to trigger interrupt
-	if(Status==0x01){
-
-	}
-
-
-
-
-
-
-
-
-	//****END OF OWN CODE*****************
-}
-
-void create_ship(uint8_t)
-{
-	// green when 3 lifes left
-	if (life = 3){
-		SetPixel(x-1,0,0,255,0);
-		SetPixel(x,0,0,255,0); 
-		SetPixel(x,1,0,255,0);
-		SetPixel(x+1,0,0,255,0);
-	}
-
-	// yellow when 2 lifes left
-	if (life = 2){
-		SetPixel(x-1,0,200,55,0);
-		SetPixel(x,0,200,55,0); 
-		SetPixel(x,1,200,55,0);
-		SetPixel(x+1,0,200,55,0);
-	}
-	// red when 1 life left
-	if (life = 1){
-		SetPixel(x-1,0,255,0,0);
-		SetPixel(x,0,255,0,0); 
-		SetPixel(x,1,255,0,0);
-		SetPixel(x+1,0,255,0,0);
-	}
-
-
-}
-
-void AlienMovementHandler()
-{
-	 if (direction == 0) {
-        SetPixel(alien, 7, 0, 50, 0);
-        SetPixel(alien - 1, 7, 0, 0, 0);
-
+		
         if (alien == 7) {
-            direction = 1;
+            direction = 1; //switch direction
         } else {
             alien++;
         }
     } else if (direction == 2) {
         // Handle end-game or specific direction case
-    } else {
+    } 
+	
+	//direction to the left
+	else {
         if (alien == 0) {
-            direction = 0;
+            direction = 0;  //switch direction
         } else {
             alien--;
         }
 
-        SetPixel(alien, 7, 0, 50, 0);
-        SetPixel(alien + 1, 7, 0, 0, 0);
+        SetPixel(alien, 6, 0, 50, 0);
+        SetPixel(alien + 1, 6, 0, 0, 0);
     }
+}
+
+// Function to handle laser behavior
+void LaserHandler(void) {
+
+	//allows only one laser at time
+    if (laser_on == 1) {
+        if (laser_y < 7) {
+            SetPixel(laser_x, laser_y, 50, 0, 0);
+        } else if (laser_y == 7) {
+
+			//clear laser
+            SetPixel(laser_x, laser_y - 1, 0, 0, 0);
+        }
+
+
+		//move up
+        if (laser_y > 2) {
+            SetPixel(laser_x, laser_y - 1, 0, 0, 0);
+        }
+
+        if (laser_y == 6 && alien == laser_x) {
+            // Alien is hit
+            SetPixel(laser_x, laser_y, 0, 0, 0);
+            SetPixel(alien, 6, 0, 0, 0);
+            SetPixel(alien - 1, 6, 0, 0, 0);
+            laser_on = 0;
+            laser_y = 2;
+            alien = 0;
+            SetPixel(points, 7, 0, 50, 0);
+            points++;
+
+            if (points == 5) {
+                // Win condition
+                for (int it = 0; it < 8; it++) {
+                    for (int j = 0; j < 8; j++) {
+                        SetPixel(it, j, 0, 50, 0); // Green color for win
+                    }
+                }
+                direction = 2; // Stop movement
+            }
+        } else if (laser_y < 7) {
+            laser_y++;
+        } else {
+            // Laser missed
+            SetPixel(misses, 7, 50, 0, 0); // Red color for miss
+            misses--;
+            laser_on = 0;
+            laser_y = 2;
+
+            if (misses == 2) {
+                // Lose condition
+                for (int it = 0; it < 8; it++) {
+                    for (int j = 0; j < 8; j++) {
+                        SetPixel(it, j, 50, 0, 0); // Red color for loss
+                    }
+                }
+                direction = 2; // Stop movement
+            }
+        }
+    }
+}
+
+//Interrupt handler for switches and buttons.
+//Reading Status will tell which button or switch was used
+//Bank information is useless in this exercise
+void ButtonHandler(void *CallBackRef, u32 Bank, u32 Status) 
+{
+	//****Write code here ****
+	//Hint: Status==0x01 ->btn0, Status==0x02->btn1, Status==0x04->btn2, Status==0x08-> btn3, Status==0x10->SW0, Status==0x20 -> SW1
+
+
+    // Clear all pixels in the ship's possible area (y = 0 and y = 1)
+    for (int i = 0; i < 8; i++) {
+        SetPixel(i, 0, 0, 0, 0); // Clear bottom row
+        SetPixel(i, 1, 0, 0, 0); // Clear middle-upper row
+    }
+
+    // Move the ship left
+    if (Status == 0x08) { // btn3
+        if (x > 1) { // Prevent moving out of bounds
+            x--; // Update ship position
+        }
+    }
+
+    // Move the ship right
+    if (Status == 0x04) { // btn2
+        if (x < 6) { // Prevent moving out of bounds
+            x++; // Update ship position
+        }
+    }
+
+    // Fire the laser
+    if (Status == 0x01) { // btn0
+        if (laser_on == 0) { // Only allow one laser at a time
+            laser_on = 1;
+            laser_x = x;   // Laser starts from the middle of the ship
+            laser_y = 2;   // Just above the ship
+        }
+    }
+
+
+	//when switch 1 is used game resets
+	if (Status == 0x20){
+		restartGame();
+	}
+
+
+    // Redraw the ship at its new position
+    create_ship(x);
+}
+
+
+void create_ship(uint8_t x)
+{
+	SetPixel(x-1,0,128,0,128);
+	SetPixel(x,0,128,0,128);
+	SetPixel(x,1,128,0,128);
+	SetPixel(x+1,0,128,0,128);
+}
+
+void restartGame()
+{
+	//clear screen
+	for (int it = 0; it < 8; it++) {
+        for (int j = 0; j < 8; j++) {
+            SetPixel(it, j, 0, 0, 0); 
+        }
+    }
+
+//reset all variables
+channel_line = 0;
+alien = 0;
+direction = 0;
+x = 4;
+laser_on = 0;
+laser_y = 2;
+laser_x = 4;
+misses = 7;
+points = 0;
 }
