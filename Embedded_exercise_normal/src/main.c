@@ -62,6 +62,10 @@
 #include "Interrupt_setup.h"
 
 volatile uint8_t current_channel = 0;
+volatile int life = 3;
+
+volatile uint8_t al = 0;
+volatile uint8_t dir = 0;
 
 //********************************************************************
 //***************TRY TO READ COMMENTS*********************************
@@ -73,8 +77,6 @@ volatile uint8_t current_channel = 0;
 
 //Comment this if you want to disable all interrupts
 #define enable_interrupts
-
-
 
 
 /***************************************************************************************
@@ -95,8 +97,16 @@ Led-matrix driver		Game		    Assembler
 Brief description:
 
 *****************************************************************************************/
+volatile uint8_t current_channel = 0;
+volatile int life = 3;
+
+uint8_t alien = 0;
+uint8_t direction = 0;
+uint8_t x = 4;
+
 
 void create_ship(uint8_t x,uint8_t y);
+void AlienMovementHandler();
 
 int main()
 {
@@ -113,8 +123,6 @@ int main()
 	    //setup screen
 	    setup();
 		
-		
-
 	    Xil_ExceptionEnable();
 		create_ship(4,0);
 
@@ -201,8 +209,36 @@ void ButtonHandler(void *CallBackRef, u32 Bank, u32 Status){
 
 void create_ship(uint8_t x,uint8_t y)
 {
-	SetPixel(x-1,0,186,85,211);
-	SetPixel(x,0,186,85,211);
-	SetPixel(x,1,186,85,211);
-	SetPixel(x+1,0,186,85,211);
+	// do life coloring here
+	if (life = 3){
+		SetPixel(x-1,0,186,85,211);
+		SetPixel(x,0,186,85,211); 
+		SetPixel(x,1,186,85,211);
+		SetPixel(x+1,0,186,85,211);
+	}
+}
+
+void AlienMovementHandler()
+{
+	 if (direction == 0) {
+        SetPixel(alien, 6, 0, 50, 0);
+        SetPixel(alien - 1, 6, 0, 0, 0);
+
+        if (alien == 7) {
+            direction = 1;
+        } else {
+            alien++;
+        }
+    } else if (direction == 2) {
+        // Handle end-game or specific direction case
+    } else {
+        if (alien == 0) {
+            direction = 0;
+        } else {
+            alien--;
+        }
+
+        SetPixel(alien, 6, 0, 50, 0);
+        SetPixel(alien + 1, 6, 0, 0, 0);
+    }
 }
