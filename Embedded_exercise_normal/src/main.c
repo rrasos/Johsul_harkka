@@ -201,7 +201,8 @@ void ButtonHandler(void *CallBackRef, u32 Bank, u32 Status){
 
 void create_ship(uint8_t x,uint8_t y)
 {
-	SetPixel(x,y,186,85,211);
-	run(x);
-	open_line(x);
+	SetPixel(x-1,0,186,85,211);
+	SetPixel(x,0,186,85,211);
+	SetPixel(x,1,186,85,211);
+	SetPixel(x+1,0,186,85,211);
 }
