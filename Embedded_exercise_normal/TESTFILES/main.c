@@ -266,7 +266,8 @@ void LaserHandler(void) {
 //Interrupt handler for switches and buttons.
 //Reading Status will tell which button or switch was used
 //Bank information is useless in this exercise
-void ButtonHandler(void *CallBackRef, u32 Bank, u32 Status) {
+void ButtonHandler(void *CallBackRef, u32 Bank, u32 Status) 
+{
     // Clear all pixels in the ship's possible area (y = 0 and y = 1)
     for (int i = 0; i < 8; i++) {
         SetPixel(i, 0, 0, 0, 0); // Clear bottom row
@@ -296,20 +297,38 @@ void ButtonHandler(void *CallBackRef, u32 Bank, u32 Status) {
         }
     }
 
-	if (Status == 0x20){
-		for (int i = 0; i < 8; i++) {
-			for (int k; k<8;k++)
-        SetPixel(i, k, 0, 0, 0);      
+	if (Status == 0x02){
+		restart();
 	}
-
     // Redraw the ship at its new position
     create_ship(x);
 }
 
 
-void create_ship(uint8_t x){
+void create_ship(uint8_t x)
+{
 	SetPixel(x-1,0,186,85,211);
 	SetPixel(x,0,186,85,211);
 	SetPixel(x,1,186,85,211);
 	SetPixel(x+1,0,186,85,211);
+}
+
+void restart()
+{
+	for (int it = 0; it < 8; it++) {
+        for (int j = 0; j < 8; j++) {
+            SetPixel(it, j, 0, 50, 0); // Green color for win
+        }
+    }
+	channel_line = 0;
+uint8_t alien = 0;
+uint8_t direction = 0;
+uint8_t x = 4;
+uint8_t laser_on = 0;
+uint8_t laser_y = 2;
+uint8_t laser_x = 4;
+uint8_t misses = 7;
+uint8_t points = 0;
+
+
 }
