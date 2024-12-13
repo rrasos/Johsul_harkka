@@ -65,6 +65,7 @@ volatile uint8_t current_channel = 0;
 
 void AlienMovementHandler(void);
 void LaserHandler(void);
+extern void blinker(void);
 
 uint8_t channel_line = 0;
 uint8_t alien = 0;
@@ -129,7 +130,7 @@ int main()
 
 	    //Try to avoid writing any code in the main loop.
 		while(1){
-
+			blinker();
 
 		}
 
@@ -203,7 +204,7 @@ void AlienMovementHandler(void) {
             alien--;
         }
 
-        SetPixel(alien, 6, 0, 50, 0);
+        SetPixel(alien, 6, 55, 0, 200);
         SetPixel(alien + 1, 6, 0, 0, 0);
     }
 }
