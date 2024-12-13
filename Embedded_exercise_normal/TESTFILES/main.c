@@ -186,7 +186,7 @@ void TickHandler1(void *CallBackRef){
 
 void AlienMovementHandler(void) {
     if (direction == 0) {
-        SetPixel(alien, 6, 0, 50, 0);
+        SetPixel(alien, 6, 55, 0, 200);
         SetPixel(alien - 1, 6, 0, 0, 0);
 
         if (alien == 7) {
@@ -307,20 +307,23 @@ void ButtonHandler(void *CallBackRef, u32 Bank, u32 Status)
 
 void create_ship(uint8_t x)
 {
-	SetPixel(x-1,0,186,85,211);
-	SetPixel(x,0,186,85,211);
-	SetPixel(x,1,186,85,211);
-	SetPixel(x+1,0,186,85,211);
+	SetPixel(x-1,0,128,0,128);
+	SetPixel(x,0,128,0,128);
+	SetPixel(x,1,128,0,128);
+	SetPixel(x+1,0,128,0,128);
 }
 
 void restart()
 {
+	//clear screen
 	for (int it = 0; it < 8; it++) {
         for (int j = 0; j < 8; j++) {
-            SetPixel(it, j, 0, 0, 0); // Green color for win
+            SetPixel(it, j, 0, 0, 0); 
         }
     }
-	channel_line = 0;
+
+//reset all variables
+channel_line = 0;
 alien = 0;
 direction = 0;
 x = 4;
