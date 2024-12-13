@@ -317,18 +317,16 @@ void restart()
 {
 	for (int it = 0; it < 8; it++) {
         for (int j = 0; j < 8; j++) {
-            SetPixel(it, j, 0, 50, 0); // Green color for win
+            SetPixel(it, j, 0, 0, 0); // Green color for win
         }
     }
 	channel_line = 0;
-uint8_t alien = 0;
-uint8_t direction = 0;
-uint8_t x = 4;
-uint8_t laser_on = 0;
-uint8_t laser_y = 2;
-uint8_t laser_x = 4;
-uint8_t misses = 7;
-uint8_t points = 0;
-
-
+alien = 0;
+direction = 0;
+x = 4;
+laser_on = 0;
+laser_y = 2;
+laser_x = 4;
+misses = 7;
+points = 0;
 }
