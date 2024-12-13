@@ -119,7 +119,7 @@ int main()
 	    setup();
 		
 	    Xil_ExceptionEnable();
-		create_ship(4,0);
+		create_ship(4);
 
 
 	    //Try to avoid writing any code in the main loop.
